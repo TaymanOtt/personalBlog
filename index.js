@@ -4,8 +4,34 @@ const path = require('path');
 const multer = require('multer');
 const clamscan = require('clamscan');
 const { scanPorts } = require('./scanner');
+const winston = require('winston');
+const morgan = require('morgan');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+//Configure Winston
+const logger = winston.createLogger({
+  level: 'info',
+  format: winston.format.combine(
+    winston.format.json()
+  ),
+  transports: [
+    //write logs to file
+    new winston.transports.File({ filename: 'error.log', level: 'error'}),
+    new winston.transports.File({ filename: 'combined.log'})
+  ]
+});
+
+//Create Custom Stream for Morgan
+const stream = {
+  write: (message) => {
+    logger.info(message.trim());
+  }
+};
+
+//Set up Morgan for request logging
+app.use(morgan('combined', { stream }));
 
 // Middleware to handle JSON requests
 app.use(express.json());
